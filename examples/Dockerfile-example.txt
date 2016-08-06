@@ -1,0 +1,35 @@
+FROM django-microservice-api-base
+
+# Specify maintainer
+MAINTAINER Someone <someone@something.somedomain>
+
+# Allow for a customized settings-file
+VOLUME ["/var/www/api/code/api/settings/secrets/"]
+
+# Throw in custom Apache config files
+ADD docker-files/*.conf /etc/httpd/conf.d/
+
+# Add our code
+ADD code/ /var/www/api/code
+
+# Switch to root, change ownership, and change back again
+USER root
+RUN chown apache:apache -R /var/www/api			&& \
+    chmod og-rwx -R /var/www/api				&& \
+    chmod u+rwx -R /var/www/api
+USER apache
+
+#
+# Install all python-libraries required.
+# Also install peep, and verify its authenticity. Peep
+# will help us keep the python libraries we install authentic.
+# You can revert to using plain pip, if you like.
+
+RUN cd /var/www/api/ 					&& \
+    mkdir python-virtualenv 					&& \
+    virtualenv python-virtualenv 				&& \
+    source python-virtualenv/bin/activate 			&& \
+    pip install peep==3.1					&& \
+    cd python-virtualenv/lib/python2.7/site-packages		&& \
+    echo "92b76810971d12cf8dd31ffe9436009e3f6fcc793a68d3f0902922a45feb1afe peep.py" | sha256sum -c && \
+    peep install -r /var/www/api/code/requirements.txt
