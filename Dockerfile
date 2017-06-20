@@ -1,11 +1,16 @@
 # Use CentOS 7.1 as base
 FROM centos:7.1.1503
 
+# Needed to make it build
+RUN yum swap -y fakesystemd systemd && \
+    yum install -y systemd-devel
+
+
 # Start by installing security-updates, then install the packages we need --
 # MariaDB-libs, python, util stuff, gcc to be able to compile stuff. Also 
 # install debugging tools (you will appreciate those when something breaks).
-
 RUN yum makecache fast                                          && \
+    yum upgrade -y						&& \
     yum update -y                                               && \
     yum install -y epel-release			&& \
     yum install -y	python 				\
